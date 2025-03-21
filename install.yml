@@ -1,0 +1,46 @@
+---
+- name: Install Docker Daemon onto all nodes
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Check if Docker is installed
+      ansible.builtin.command: 
+        cmd: docker --version
+      register: installed
+      ignore_errors: true
+
+    - name: Download Docker install script
+      ansible.builtin.get_url:
+        url: https://get.docker.com
+        dest: /tmp/docker.sh
+        mode: "0700" # U:RWX, G:N, O:N
+      when: installed.failed
+
+    - name: Run Docker install script
+      ansible.builtin.command:
+        cmd: /tmp/docker.sh
+      environment:
+        CHANNEL: stable
+      register: result
+      changed_when: result.rc == 0
+      when: installed.failed
+
+    - name: Enable Docker at boot
+      ansible.builtin.systemd_service:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Create startup containers
+      community.docker.docker_container:
+        name: "{{ item.name }}"
+        image: "{{ item.image }}"
+        detach: true
+        published_ports: "{{ item.ports }}" 
+        env: "{{ item.env }}"
+        volumes: "{{ item.volumes }}"
+        recreate: "{{ item.recreate }}"
+        restart_policy: "{{ item.restart }}"
+        state: started
+      loop: "{{ containers }}"
