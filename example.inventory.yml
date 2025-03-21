@@ -17,3 +17,4 @@ all:
             - /var/run/docker.sock:/var/run/docker.sock
           restart: always
           recreate: true
+          user: 1000:1000

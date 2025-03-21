@@ -37,10 +37,11 @@
         name: "{{ item.name }}"
         image: "{{ item.image }}"
         detach: true
-        published_ports: "{{ item.ports }}" 
+        published_ports: "{{ item.ports }}"
         env: "{{ item.env }}"
         volumes: "{{ item.volumes }}"
         recreate: "{{ item.recreate }}"
         restart_policy: "{{ item.restart }}"
+        user: "{{ item.user }}"
         state: started
       loop: "{{ containers }}"
